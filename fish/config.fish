@@ -56,3 +56,5 @@ function t --description "sesh session picker"
 end
 
 bind \ek 'commandline -r "t"; commandline -f execute'
+
+zoxide init fish | source
