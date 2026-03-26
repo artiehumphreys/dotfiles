@@ -13,7 +13,6 @@ cursor-text = #ffffff
 background = FAFAFA
 foreground = 575F66
 cursor-color = 36A3D9
-cursor-style = bar
 
 # Normal colors
 palette = 0=#000000
