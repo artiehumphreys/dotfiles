@@ -40,12 +40,12 @@ require("lazy").setup({
 
 	-- Theme
 	{
-		"Shatur/neovim-ayu",
+		"navarasu/onedark.nvim",
 		lazy = false,
 		priority = 1000,
 		config = function()
-			require("ayu").setup({ mirage = false })
-			vim.cmd("colorscheme ayu-light")
+			require("onedark").setup({ style = "light" })
+			require("onedark").load()
 		end,
 	},
 
@@ -55,7 +55,7 @@ require("lazy").setup({
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 		opts = {
 			options = {
-				theme = "ayu_light",
+				theme = "onedark",
 				section_separators = { left = "", right = "" },
 				component_separators = { left = "", right = "" },
 			},
