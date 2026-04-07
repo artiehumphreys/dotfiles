@@ -24,6 +24,8 @@ set -gx OPENSSL_ROOT_DIR /opt/homebrew/opt/openssl@3
 # --- fzf ---
 set -gx FZF_DEFAULT_OPTS "--height=40% --preview='cat {}' --preview-window=right:60%:wrap"
 
+set -gx FZF_DEFAULT_COMMAND "find . -type f -print -o -type l -print | grep -v '.git/'"
+
 if test -d /usr/local/opt/fzf
     set -gx FZF_BASE /usr/local/opt/fzf
     fish_add_path $FZF_BASE/bin

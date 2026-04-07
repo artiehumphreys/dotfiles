@@ -79,32 +79,24 @@ require("lazy").setup({
 				layout_strategy = "horizontal",
 				layout_config = { preview_width = 0.5 },
 			},
+			pickers = {
+				find_files = {
+					hidden = true,
+					file_ignore_patterns = { "%.git/" },
+				},
+			},
 		},
 	},
 
 	-- Mason
 	{
 		"williamboman/mason.nvim",
-		opts = {},
+		config = function()
+			require("mason").setup()
+			vim.env.PATH = vim.fn.stdpath("data") .. "/mason/bin:" .. vim.env.PATH
+		end,
 	},
-	{
-		"williamboman/mason-lspconfig.nvim",
-		dependencies = { "williamboman/mason.nvim" },
-		opts = {
-			ensure_installed = {
-				"clangd",
-				"ts_ls",
-				"jsonls",
-				"yamlls",
-				"html",
-				"cssls",
-				"eslint",
-				"pyright",
-				"lua_ls",
-				"bashls",
-			},
-		},
-	},
+	{ import = "plugins" },
 
 	-- Autocompletion
 	{
@@ -160,18 +152,18 @@ require("lazy").setup({
 				cpp = { "clang-format" },
 				c = { "clang-format" },
 				h = { "clang-format" },
-				hpp = { "clang-format" },
 				python = { "black" },
 				javascript = { "prettier" },
 				typescript = { "prettier" },
 				typescriptreact = { "prettier" },
+				mdx = { "prettier" },
 				lua = { "stylua" },
 				sh = { "shfmt" },
 				bash = { "shfmt" },
 				zsh = { "shfmt" },
 			},
 			format_on_save = {
-				timeout_ms = 500,
+				timeout_ms = 2000,
 				lsp_format = "fallback",
 			},
 		},
@@ -295,9 +287,17 @@ require("lazy").setup({
 	},
 })
 
+vim.diagnostic.config({
+	virtual_text = true,
+	signs = true,
+	underline = true,
+	update_in_insert = false,
+})
+
 -- LSP keymaps on attach
 vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(ev)
+		local client = vim.lsp.get_client_by_id(ev.data.client_id)
 		local map = function(mode, lhs, rhs, desc)
 			vim.keymap.set(mode, lhs, rhs, { buffer = ev.buf, desc = desc })
 		end
@@ -308,39 +308,12 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		map("n", "<leader>rn", vim.lsp.buf.rename, "Rename")
 		map("n", "<leader>d", vim.diagnostic.setloclist, "Diagnostics")
 		map("n", "<leader>s", "<cmd>Telescope lsp_document_symbols<cr>", "Symbols")
+		if client and client.supports_method("textDocument/inlayHint") then
+			vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+		end
 	end,
 })
 
--- LSP server configs
-vim.lsp.config("*", {})
-
-vim.lsp.config("lua_ls", {
-	settings = {
-		Lua = {
-			runtime = { version = "LuaJIT" },
-			workspace = {
-				checkThirdParty = false,
-				library = vim.api.nvim_get_runtime_file("", true),
-			},
-			diagnostics = { globals = { "vim" } },
-			completion = { callSnippet = "Replace" },
-			telemetry = { enable = false },
-		},
-	},
-})
-
-vim.lsp.enable({
-	"clangd",
-	"ts_ls",
-	"jsonls",
-	"yamlls",
-	"html",
-	"cssls",
-	"eslint",
-	"pyright",
-	"lua_ls",
-	"bashls",
-})
 
 -- Keymaps
 local map = vim.keymap.set
@@ -360,6 +333,8 @@ vim.api.nvim_create_user_command("Cpy", function()
 	vim.cmd("%w !pbcopy")
 	vim.cmd("redraw!")
 end, {})
+
+vim.filetype.add({ extension = { mdx = "mdx" } })
 
 -- Filetype settings
 vim.api.nvim_create_autocmd("FileType", {
