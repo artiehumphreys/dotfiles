@@ -6,7 +6,8 @@ font-feature = "-calt"
 font-size = 20
 adjust-cell-height = 0%
 
-window-vsync = false
+# window-vsync = false
+scrollback-limit = 10000
 
 cursor-text = #ffffff
 

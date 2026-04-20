@@ -278,6 +278,12 @@ require("lazy").setup({
 		end,
 	},
 
+	-- CMake
+	{
+		"Civitasv/cmake-tools.nvim",
+		opts = {},
+	},
+
 	-- Auto-detect indent
 	{ "tpope/vim-sleuth" },
 
@@ -314,7 +320,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
-
 -- Keymaps
 local map = vim.keymap.set
 
@@ -328,6 +333,7 @@ map("n", "gT", ":bprev<CR>", { silent = true })
 map("i", "<C-BS>", "<C-W>")
 map("n", "<leader>w", "<C-w>w")
 map("v", "<Tab>", ">gv")
+map("v", "Y", '"+y')
 
 vim.api.nvim_create_user_command("Cpy", function()
 	vim.cmd("%w !pbcopy")
