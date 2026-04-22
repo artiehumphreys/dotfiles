@@ -1,6 +1,6 @@
 -- Leader key
-vim.g.mapleader = "/"
-vim.g.maplocalleader = "/"
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
 -- General Settings
 vim.opt.number = true
@@ -68,11 +68,11 @@ require("lazy").setup({
 		branch = "0.1.x",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		keys = {
-			{ "<leader>f", "<cmd>Telescope find_files<cr>", desc = "Files" },
-			{ "<leader>b", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
-			{ "<leader>g", "<cmd>Telescope git_files<cr>", desc = "Git files" },
-			{ "<leader>/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Lines" },
-			{ "<C-f>", "<cmd>Telescope live_grep<cr>", desc = "Grep" },
+			{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Files" },
+			{ "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+			{ "<leader>fg", "<cmd>Telescope git_files<cr>", desc = "Git files" },
+			{ "<leader>fl", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Lines" },
+			{ "<leader>fr", "<cmd>Telescope live_grep<cr>", desc = "Grep" },
 		},
 		opts = {
 			defaults = {
@@ -219,33 +219,14 @@ require("lazy").setup({
 		opts = {},
 	},
 
-	-- Floating terminal
+	-- TODO comments
 	{
-		"akinsho/toggleterm.nvim",
-		version = "*",
-		opts = {
-			size = function(term)
-				if term.direction == "horizontal" then
-					return 15
-				elseif term.direction == "vertical" then
-					return vim.o.columns * 0.4
-				end
-			end,
-			direction = "float",
-			float_opts = {
-				border = "curved",
-				width = function()
-					return math.floor(vim.o.columns * 0.4)
-				end,
-				height = function()
-					return math.floor(vim.o.lines * 0.4)
-				end,
-			},
-		},
+		"folke/todo-comments.nvim",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		event = "BufReadPost",
+		opts = {},
 		keys = {
-			{ "<leader>tt", "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
-			{ "<leader>tt", "<cmd>ToggleTerm<cr>", mode = "t", desc = "Toggle terminal" },
-			{ "<leader>tk", "<cmd>ToggleTerm<cr>", desc = "Kill terminal" },
+			{ "<leader>tt", "<cmd>TodoTelescope<cr>", desc = "TODO list" },
 		},
 	},
 
@@ -276,12 +257,6 @@ require("lazy").setup({
 				indent = { enable = true },
 			})
 		end,
-	},
-
-	-- CMake
-	{
-		"Civitasv/cmake-tools.nvim",
-		opts = {},
 	},
 
 	-- Auto-detect indent
