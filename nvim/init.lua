@@ -21,6 +21,15 @@ vim.opt.updatetime = 250
 
 vim.g.python3_host_prog = "/opt/homebrew/opt/python@3.13/libexec/bin/python"
 
+vim.opt.shell = "/bin/sh"
+
+vim.api.nvim_create_user_command("Term", function()
+	local saved = vim.o.shell
+	vim.o.shell = vim.env.SHELL or saved
+	vim.cmd("terminal")
+	vim.o.shell = saved
+end, {})
+
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
