@@ -9,6 +9,9 @@ adjust-cell-height = 0%
 # window-vsync = false
 scrollback-limit = 10000
 
+macos-icon = custom
+macos-custom-icon = ./catppuccin-frappe.icns
+
 cursor-text = #ffffff
 
 background = FAFAFA
