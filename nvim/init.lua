@@ -275,6 +275,8 @@ require("lazy").setup({
 		"karb94/neoscroll.nvim",
 		opts = {},
 	},
+}, {
+	rocks = { enabled = false },
 })
 
 vim.diagnostic.config({
