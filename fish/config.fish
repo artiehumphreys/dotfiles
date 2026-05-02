@@ -44,7 +44,9 @@ end
 fish_add_path $HOME/.cargo/bin
 fish_add_path $HOME/.local/bin
 
-set -gx TERM xterm-256color
+if not set -q TMUX
+    set -gx TERM xterm-256color
+end
 
 function t --description "sesh session picker"
     set -lx FZF_DEFAULT_OPTS "--height=40% --reverse --border-label ' sesh ' --border --prompt 'Φ  '"

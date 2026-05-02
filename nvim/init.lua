@@ -249,6 +249,7 @@ require("lazy").setup({
 					"c",
 					"cpp",
 					"cmake",
+					"make",
 					"python",
 					"javascript",
 					"typescript",
@@ -270,6 +271,9 @@ require("lazy").setup({
 
 	-- Auto-detect indent
 	{ "tpope/vim-sleuth" },
+
+	-- Neovim plugin testing
+	{ "nvim-mini/mini.nvim", version = false },
 
 	{
 		"karb94/neoscroll.nvim",
@@ -320,6 +324,7 @@ map("i", "<C-BS>", "<C-W>")
 map("n", "<leader>w", "<C-w>w")
 map("v", "<Tab>", ">gv")
 map("v", "Y", '"+y')
+vim.cmd("iabbrev ;- —")
 
 vim.api.nvim_create_user_command("Cpy", function()
 	vim.cmd("%w !pbcopy")
