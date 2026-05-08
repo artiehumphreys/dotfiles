@@ -1,8 +1,7 @@
 theme = "Monokai Pro Light"
 
-window-decoration = none
-font-family = "Berkeley Mono"
-font-feature = "-calt"
+font-family = "IoskeleyMono Nerd Font"
+font-variation = slnt=0
 font-size = 20
 adjust-cell-height = 0%
 
@@ -10,7 +9,7 @@ adjust-cell-height = 0%
 scrollback-limit = 10000
 
 macos-icon = custom
-macos-custom-icon = ./catppuccin-frappe.icns
+macos-custom-icon = ~/dotfiles/ghostty/catppuccin-frappe.icns
 
 cursor-text = #ffffff
 
