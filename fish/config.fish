@@ -3,12 +3,12 @@ set -gx HOMEBREW_CELLAR /opt/homebrew/Cellar
 set -gx HOMEBREW_REPOSITORY /opt/homebrew
 fish_add_path /opt/homebrew/bin /opt/homebrew/sbin
 
-# --- Aliases ---
+# Aliases 
 alias nv "nvim"
 alias tailscale "/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 alias ohmyzsh "mate ~/.oh-my-zsh"
 
-# --- Path additions ---
+# Path additions 
 fish_add_path /Applications/Blender.app/Contents/MacOS
 fish_add_path /opt/homebrew/opt/python/libexec/bin
 fish_add_path $HOME/go/bin
@@ -17,11 +17,11 @@ if type -q brew
     fish_add_path (brew --prefix llvm)/bin
 end
 
-# --- Environment variables ---
+# Environment variables 
 set -gx GOPATH $HOME/go
 set -gx OPENSSL_ROOT_DIR /opt/homebrew/opt/openssl@3
 
-# --- fzf ---
+# fzf 
 set -gx FZF_DEFAULT_OPTS "--height=40% --preview='cat {}' --preview-window=right:60%:wrap"
 
 set -gx FZF_DEFAULT_COMMAND "find . -type f -print -o -type l -print | grep -v '.git/'"
@@ -35,12 +35,24 @@ if type -q fzf
     fzf --fish | source
 end
 
-# --- Helper functions ---
+# Helper functions 
 function mcd --description "mkdir and cd into it"
     mkdir -p $argv[1]; and cd $argv[1]
 end
 
-# --- Cargo/Rustup (replaces sourcing ~/.local/bin/env) ---
+function ff --description "fzf files in dir (default: cwd)"
+    set -l dir (test -n "$argv[1]"; and echo $argv[1]; or echo .)
+    find $dir -type f -not -path '*/.git/*' | fzf --preview 'cat {}'
+end
+
+function fcd --description "fzf cd into subdir"
+    set -l dir (test -n "$argv[1]"; and echo $argv[1]; or echo .)
+    set -l target (find $dir -type d -not -path '*/.git/*' | fzf)
+    test -z "$target"; and return
+    cd $target
+end
+
+#  Cargo/Rustup (replaces sourcing ~/.local/bin/env) 
 fish_add_path $HOME/.cargo/bin
 fish_add_path $HOME/.local/bin
 
@@ -61,4 +73,4 @@ end
 
 bind \ek 'commandline -r "t"; commandline -f execute'
 
-zoxide init fish | source
+zoxide init fish --cmd cd | source

@@ -7,11 +7,60 @@ return {
 		{
 			"folke/lazydev.nvim",
 			ft = "lua",
-			opts = {},
+			opts = {
+				library = {
+					{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+				},
+			},
 		},
 	},
 	config = function()
 		local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+		vim.lsp.config("*", { capabilities = capabilities })
+
+		vim.lsp.config("clangd", {
+			cmd = { "clangd", "--log=error", "--background-index", "--clang-tidy" },
+		})
+
+		vim.lsp.config("lua_ls", {
+			capabilities = capabilities,
+			settings = {
+				Lua = {
+					runtime = {
+						version = "LuaJIT",
+						path = { "?.lua", "?/init.lua" },
+						pathStrict = false,
+					},
+					workspace = {
+						checkThirdParty = false,
+						library = {
+							vim.env.VIMRUNTIME .. "/lua",
+							vim.env.VIMRUNTIME .. "/lua/vim/_meta",
+						},
+						ignoreDir = {},
+						maxPreload = 100000,
+						preloadFileSize = 10000,
+					},
+					diagnostics = {
+						globals = { "vim", "MiniTest" },
+						unusedLocalExclude = { "_*" },
+						disable = { "no-unknown", "missing-fields", "incomplete-signature-doc" },
+					},
+					hint = {
+						enable = true,
+						setType = true,
+						paramType = true,
+						paramName = "All",
+						semicolon = "Disable",
+						arrayIndex = "Disable",
+					},
+					completion = { callSnippet = "Replace" },
+					telemetry = { enable = false },
+				},
+			},
+		})
+
 		require("mason-lspconfig").setup({
 			ensure_installed = {
 				"clangd",
@@ -24,35 +73,6 @@ return {
 				"pyright",
 				"lua_ls",
 				"bashls",
-			},
-			handlers = {
-				function(server_name)
-					require("lspconfig")[server_name].setup({ capabilities = capabilities })
-				end,
-				["lua_ls"] = function()
-					require("lspconfig").lua_ls.setup({
-						capabilities = capabilities,
-						settings = {
-							Lua = {
-								runtime = { version = "LuaJIT" },
-								workspace = {
-									checkThirdParty = false,
-									library = vim.api.nvim_get_runtime_file("", true),
-								},
-								hint = {
-									enable = true,
-									setType = true,
-									paramType = true,
-									paramName = "All",
-									semicolon = "Disable",
-									arrayIndex = "Disable",
-								},
-								completion = { callSnippet = "Replace" },
-								telemetry = { enable = false },
-							},
-						},
-					})
-				end,
 			},
 		})
 	end,
