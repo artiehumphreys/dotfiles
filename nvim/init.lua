@@ -340,11 +340,18 @@ map("i", "jj", "<Esc>")
 map("n", "Q", ":b#<CR>", { silent = true })
 map("n", "gt", ":bnext<CR>", { silent = true })
 map("n", "gT", ":bprev<CR>", { silent = true })
+map("n", "<leader>tn", ":tabnext<CR>", { silent = true })
+map("n", "<leader>tp", ":tabprev<CR>", { silent = true })
+map("n", "<leader>tc", ":tabclose<CR>", { silent = true })
 map("i", "<C-BS>", "<C-W>")
 map("n", "<leader>w", "<C-w>w")
 map("v", "<Tab>", ">gv")
 map("v", "Y", '"+y')
 vim.cmd("iabbrev ;- —")
+
+-- Open :help in new tab
+vim.cmd([[cnoreabbrev <expr> h getcmdtype() == ':' && getcmdline() ==# 'h' ? 'tab h' : 'h']])
+vim.cmd([[cnoreabbrev <expr> help getcmdtype() == ':' && getcmdline() ==# 'help' ? 'tab help' : 'help']])
 
 vim.api.nvim_create_user_command("Cpy", function()
 	vim.cmd("%w !pbcopy")
