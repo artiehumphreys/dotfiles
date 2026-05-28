@@ -13,6 +13,8 @@ fish_add_path /Applications/Blender.app/Contents/MacOS
 fish_add_path /opt/homebrew/opt/python/libexec/bin
 fish_add_path $HOME/go/bin
 
+source $HOME/dotfiles/fish/secrets/secrets.fish
+
 if type -q brew
     fish_add_path (brew --prefix llvm)/bin
 end
@@ -50,6 +52,13 @@ function fcd --description "fzf cd into subdir"
     set -l target (find $dir -type d -not -path '*/.git/*' | fzf)
     test -z "$target"; and return
     cd $target
+end
+
+function wake-station --description "wake up workstation and ssh into it"
+    wakeonlan $WORKSTATION_MAC
+    echo "Waking workstation..."
+    sleep 30
+    ssh $WORKSTATION_HOST
 end
 
 #  Cargo/Rustup (replaces sourcing ~/.local/bin/env) 
