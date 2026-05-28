@@ -32,7 +32,7 @@ end, {})
 
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
 	vim.fn.system({
 		"git",
 		"clone",
@@ -74,7 +74,7 @@ require("lazy").setup({
 	-- Fuzzy finder
 	{
 		"nvim-telescope/telescope.nvim",
-		branch = "0.1.x",
+		branch = "master",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		keys = {
 			{ "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Files" },
@@ -92,6 +92,7 @@ require("lazy").setup({
 				find_files = {
 					hidden = true,
 					file_ignore_patterns = { "%.git/" },
+					find_command = { "rg", "--files", "--hidden", "--glob", "!.git/*" },
 				},
 			},
 		},
@@ -170,6 +171,7 @@ require("lazy").setup({
 				sh = { "shfmt" },
 				bash = { "shfmt" },
 				zsh = { "shfmt" },
+				cmake = { "gersemi" },
 			},
 			format_on_save = {
 				timeout_ms = 2000,
@@ -247,7 +249,6 @@ require("lazy").setup({
 		config = function()
 			require("nvim-treesitter.configs").setup({
 				ensure_installed = {
-					"c",
 					"cpp",
 					"cmake",
 					"make",
@@ -259,14 +260,34 @@ require("lazy").setup({
 					"yaml",
 					"html",
 					"css",
-					"lua",
-					"vim",
-					"markdown",
 					"bash",
 				},
 				highlight = { enable = true },
 				indent = { enable = true },
 			})
+
+			-- Patch nvim-treesitter master directive for nvim 0.12 match shape
+			local non_filetype_aliases = {
+				ex = "elixir",
+				pl = "perl",
+				sh = "bash",
+				uxn = "uxntal",
+				ts = "typescript",
+			}
+			vim.treesitter.query.add_directive("set-lang-from-info-string!", function(match, _, bufnr, pred, metadata)
+				local capture_id = pred[2]
+				local node = match[capture_id]
+				if type(node) == "table" then
+					node = node[#node]
+				end
+				if not node then
+					return
+				end
+				local alias = vim.treesitter.get_node_text(node, bufnr):lower()
+				metadata["injection.language"] = vim.filetype.match({ filename = "a." .. alias })
+					or non_filetype_aliases[alias]
+					or alias
+			end, { force = true, all = false })
 		end,
 	},
 
@@ -324,7 +345,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		map("n", "<leader>rn", vim.lsp.buf.rename, "Rename")
 		map("n", "<leader>d", vim.diagnostic.setloclist, "Diagnostics")
 		map("n", "<leader>s", "<cmd>Telescope lsp_document_symbols<cr>", "Symbols")
-		if client and client.supports_method("textDocument/inlayHint") then
+		if client and client:supports_method("textDocument/inlayHint") then
 			vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
 		end
 	end,
@@ -343,6 +364,7 @@ map("n", "gT", ":bprev<CR>", { silent = true })
 map("n", "<leader>tn", ":tabnext<CR>", { silent = true })
 map("n", "<leader>tp", ":tabprev<CR>", { silent = true })
 map("n", "<leader>tc", ":tabclose<CR>", { silent = true })
+map("n", "<leader>lr", ":LspRestart<CR>", { silent = true, desc = "Restart LSP" })
 map("i", "<C-BS>", "<C-W>")
 map("n", "<leader>w", "<C-w>w")
 map("v", "<Tab>", ">gv")

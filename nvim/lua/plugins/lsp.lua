@@ -73,6 +73,8 @@ return {
 				"pyright",
 				"lua_ls",
 				"bashls",
+				"neocmake",
+				"autotools_ls",
 			},
 		})
 	end,

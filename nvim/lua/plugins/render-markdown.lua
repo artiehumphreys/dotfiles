@@ -25,5 +25,20 @@ return {
 			unchecked = { icon = "󰄱 " },
 			checked = { icon = "󰱒 " },
 		},
+		quote = { repeat_linebreak = true },
+		win_options = {
+			showbreak = {
+				default = "",
+				rendered = "  ",
+			},
+			breakindent = {
+				default = false,
+				rendered = true,
+			},
+			breakindentopt = {
+				default = "",
+				rendered = "",
+			},
+		},
 	},
 }
