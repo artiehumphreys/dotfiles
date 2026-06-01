@@ -20,7 +20,15 @@ return {
 		vim.lsp.config("*", { capabilities = capabilities })
 
 		vim.lsp.config("clangd", {
-			cmd = { "clangd", "--log=error", "--background-index", "--clang-tidy" },
+			cmd = {
+				"clangd",
+				"--log=error",
+				"--clang-tidy",
+				"--limit-references=100",
+				"--limit-results=20",
+				"--pch-storage=memory",
+				"--header-insertion=never",
+			},
 		})
 
 		vim.lsp.config("lua_ls", {
@@ -38,9 +46,8 @@ return {
 							vim.env.VIMRUNTIME .. "/lua",
 							vim.env.VIMRUNTIME .. "/lua/vim/_meta",
 						},
-						ignoreDir = {},
-						maxPreload = 100000,
-						preloadFileSize = 10000,
+						maxPreload = 2000,
+						preloadFileSize = 1000,
 					},
 					diagnostics = {
 						globals = { "vim", "MiniTest" },

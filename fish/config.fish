@@ -82,4 +82,4 @@ end
 
 bind \ek 'commandline -r "t"; commandline -f execute'
 
-zoxide init fish --cmd cd | source
+zoxide init fish | source
