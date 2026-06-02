@@ -364,7 +364,12 @@ map("n", "gT", ":bprev<CR>", { silent = true })
 map("n", "<leader>tn", ":tabnext<CR>", { silent = true })
 map("n", "<leader>tp", ":tabprev<CR>", { silent = true })
 map("n", "<leader>tc", ":tabclose<CR>", { silent = true })
-map("n", "<leader>lr", ":LspRestart<CR>", { silent = true, desc = "Restart LSP" })
+map("n", "<leader>lr", function()
+	for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+		c:stop()
+	end
+	vim.cmd.edit()
+end, { silent = true, desc = "Restart LSP" })
 map("i", "<C-BS>", "<C-W>")
 map("n", "<leader>w", "<C-w>w")
 map("v", "<Tab>", ">gv")
@@ -388,6 +393,16 @@ vim.api.nvim_create_autocmd("FileType", {
 	callback = function()
 		vim.opt_local.shiftwidth = 2
 		vim.opt_local.tabstop = 2
+	end,
+})
+
+-- C/C++: 2-space indent, use cindent (treesitter cpp indent is flaky on newline)
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = { "c", "cpp", "h" },
+	callback = function()
+		vim.opt_local.shiftwidth = 2
+		vim.opt_local.tabstop = 2
+		vim.opt_local.indentexpr = ""
 	end,
 })
 
