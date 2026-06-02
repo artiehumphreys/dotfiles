@@ -47,6 +47,10 @@ return {
 			},
 			routes = {
 				{
+					filter = { event = "lsp", kind = "progress", find = "pyright" },
+					opts = { skip = true },
+				},
+				{
 					filter = { event = "msg_show", kind = "search_count" },
 					opts = { skip = true },
 				},

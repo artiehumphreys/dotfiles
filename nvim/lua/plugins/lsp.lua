@@ -27,7 +27,7 @@ return {
 				"--limit-references=100",
 				"--limit-results=20",
 				"--pch-storage=memory",
-				"--header-insertion=never",
+				"--header-insertion=iwyu",
 			},
 		})
 
