@@ -7,6 +7,8 @@ return {
 	ft = { "markdown", "mdx" },
 	opts = {
 		file_types = { "markdown", "mdx" },
+		anti_conceal = { enabled = true },
+		latex = { position = "below" },
 		heading = {
 			sign = false,
 			width = "block",
@@ -29,7 +31,7 @@ return {
 		win_options = {
 			showbreak = {
 				default = "",
-				rendered = "  ",
+				rendered = "",
 			},
 			breakindent = {
 				default = false,
