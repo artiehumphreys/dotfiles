@@ -167,6 +167,7 @@ require("lazy").setup({
 				typescript = { "prettier" },
 				typescriptreact = { "prettier" },
 				mdx = { "prettier" },
+				markdown = { "prettier" },
 				lua = { "stylua" },
 				sh = { "shfmt" },
 				bash = { "shfmt" },
@@ -245,49 +246,49 @@ require("lazy").setup({
 	-- Treesitter
 	{
 		"nvim-treesitter/nvim-treesitter",
+		branch = "main",
 		build = ":TSUpdate",
 		config = function()
-			require("nvim-treesitter.configs").setup({
-				ensure_installed = {
-					"cpp",
-					"cmake",
-					"make",
-					"python",
-					"javascript",
-					"typescript",
-					"tsx",
-					"json",
-					"yaml",
-					"html",
-					"css",
-					"bash",
-				},
-				highlight = { enable = true },
-				indent = { enable = true },
-			})
-
-			-- Patch nvim-treesitter master directive for nvim 0.12 match shape
-			local non_filetype_aliases = {
-				ex = "elixir",
-				pl = "perl",
-				sh = "bash",
-				uxn = "uxntal",
-				ts = "typescript",
+			local parsers = {
+				"cpp",
+				"cmake",
+				"make",
+				"python",
+				"javascript",
+				"typescript",
+				"tsx",
+				"json",
+				"yaml",
+				"html",
+				"css",
+				"bash",
+				"markdown",
+				"markdown_inline",
+				"latex",
+				"vim",
+				"lua",
+				"regex",
 			}
-			vim.treesitter.query.add_directive("set-lang-from-info-string!", function(match, _, bufnr, pred, metadata)
-				local capture_id = pred[2]
-				local node = match[capture_id]
-				if type(node) == "table" then
-					node = node[#node]
+			require("nvim-treesitter").install(parsers)
+
+			-- main branch: enable highlight + indent per-buffer (no auto-enable)
+			local function ts_start(buf)
+				local lang = vim.treesitter.language.get_lang(vim.bo[buf].filetype)
+				if lang and pcall(vim.treesitter.start, buf, lang) then
+					vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 				end
-				if not node then
-					return
+			end
+			vim.api.nvim_create_autocmd("FileType", {
+				callback = function(args)
+					ts_start(args.buf)
+				end,
+			})
+			-- catch buffers already loaded before this config ran (e.g. first file at launch)
+			for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+				if vim.api.nvim_buf_is_loaded(buf) then
+					ts_start(buf)
 				end
-				local alias = vim.treesitter.get_node_text(node, bufnr):lower()
-				metadata["injection.language"] = vim.filetype.match({ filename = "a." .. alias })
-					or non_filetype_aliases[alias]
-					or alias
-			end, { force = true, all = false })
+			end
 		end,
 	},
 
@@ -301,34 +302,22 @@ require("lazy").setup({
 		"karb94/neoscroll.nvim",
 		opts = {},
 	},
-	{
-		"dlyongemallo/sanity.nvim",
-		cmd = { "SanityLoadLog", "SanityRunValgrind" },
-		opts = {
-			-- picker = "fzf-lua",  -- "telescope", "mini.pick", "snacks"; nil to auto-detect
-			-- keymaps = {
-			--   stack_next = "]s",   -- set to false to disable
-			--   stack_prev = "[s",   -- set to false to disable
-			--   show_stack = false,  -- set to a key (e.g., "<a-s>") to enable
-			--   explain    = false,  -- set to a key (e.g., "<a-e>") to enable
-			--   related    = false,  -- set to a key (e.g., "<a-r>") to enable
-			--   suppress   = false,  -- set to a key (e.g., "<a-x>") to enable
-			--   debug      = false,  -- set to a key (e.g., "<a-d>") to enable
-			-- },
-			-- track_origins = "ask",  -- true (always), false (never), "ask" (prompt on uninit errors)
-			-- stack_fold_limit = 6,  -- fold long call chains in :SanityStack; 0 to disable
-			-- valgrind_suppressions = { ".valgrind.supp" },  -- passed as --suppressions= to valgrind
-		},
-	},
 }, {
 	rocks = { enabled = false },
 })
 
 vim.diagnostic.config({
 	virtual_text = true,
+	virtual_lines = false,
 	signs = true,
 	underline = true,
 	update_in_insert = false,
+	float = {
+		border = "rounded",
+		max_width = math.floor(vim.o.columns * 0.8),
+		wrap = true,
+		source = true,
+	},
 })
 
 -- LSP keymaps on attach
@@ -344,6 +333,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		map("n", "K", vim.lsp.buf.hover, "Hover")
 		map("n", "<leader>rn", vim.lsp.buf.rename, "Rename")
 		map("n", "<leader>d", vim.diagnostic.setloclist, "Diagnostics")
+		map("n", "<leader>e", function()
+			vim.diagnostic.open_float(nil, { scope = "line" })
+		end, "Show diagnostic float")
 		map("n", "<leader>s", "<cmd>Telescope lsp_document_symbols<cr>", "Symbols")
 		if client and client:supports_method("textDocument/inlayHint") then
 			vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
@@ -365,10 +357,31 @@ map("n", "<leader>tn", ":tabnext<CR>", { silent = true })
 map("n", "<leader>tp", ":tabprev<CR>", { silent = true })
 map("n", "<leader>tc", ":tabclose<CR>", { silent = true })
 map("n", "<leader>lr", function()
-	for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+	local clients = vim.lsp.get_clients({ bufnr = 0 })
+	if #clients == 0 then
+		return
+	end
+	for _, c in ipairs(clients) do
 		c:stop()
 	end
-	vim.cmd.edit()
+	-- wait for every client to fully exit before reloading, else the re-attach
+	-- races the still-stopping client and cmp-nvim-lsp keeps a stale client id
+	-- (source shows up "unavailable" -> no LSP completion until full restart)
+	local timer = assert(vim.uv.new_timer())
+	timer:start(
+		50,
+		50,
+		vim.schedule_wrap(function()
+			for _, c in ipairs(clients) do
+				if not c:is_stopped() then
+					return
+				end
+			end
+			timer:stop()
+			timer:close()
+			vim.cmd.edit()
+		end)
+	)
 end, { silent = true, desc = "Restart LSP" })
 map("i", "<C-BS>", "<C-W>")
 map("n", "<leader>w", "<C-w>w")
