@@ -30,6 +30,14 @@ vim.api.nvim_create_user_command("Term", function()
 	vim.o.shell = saved
 end, {})
 
+require("vim._core.ui2").enable({
+	enable = true,
+	msg = {
+		cmd = { height = 0.4 },
+		msg = { timeout = 5000 },
+	},
+})
+
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
@@ -211,7 +219,6 @@ require("lazy").setup({
 		"numToStr/Comment.nvim",
 		opts = {},
 	},
-
 	-- Auto pairs
 	{
 		"windwp/nvim-autopairs",
@@ -346,7 +353,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- Keymaps
 local map = vim.keymap.set
 
-map("n", "X", "xi")
 map("n", "I", "i<Right>")
 map("n", "H", "^")
 map("i", "jj", "<Esc>")
@@ -384,7 +390,11 @@ map("n", "<leader>lr", function()
 	)
 end, { silent = true, desc = "Restart LSP" })
 map("i", "<C-BS>", "<C-W>")
-map("n", "<leader>w", "<C-w>w")
+-- Cycle to next window and size it to 40% height
+map("n", "<leader>w", function()
+	vim.cmd("wincmd w")
+	vim.cmd("resize " .. math.floor(vim.o.lines * 0.4))
+end, { silent = true, desc = "Cycle window + 40% height" })
 map("v", "<Tab>", ">gv")
 map("v", "Y", '"+y')
 vim.cmd("iabbrev ;- —")
