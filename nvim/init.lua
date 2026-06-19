@@ -8,7 +8,7 @@ vim.opt.relativenumber = true
 vim.opt.termguicolors = true
 vim.opt.background = "light"
 vim.opt.laststatus = 2
-vim.opt.wildmode = { "longest", "list", "full" }
+vim.opt.wildmode = { "longest:full", "full" }
 vim.opt.wildmenu = true
 vim.opt.autoread = true
 vim.opt.expandtab = true
@@ -399,9 +399,21 @@ map("v", "<Tab>", ">gv")
 map("v", "Y", '"+y')
 vim.cmd("iabbrev ;- —")
 
--- Open :help in new tab
+-- Open :help in new tab (native completion via <Tab>)
 vim.cmd([[cnoreabbrev <expr> h getcmdtype() == ':' && getcmdline() ==# 'h' ? 'tab h' : 'h']])
 vim.cmd([[cnoreabbrev <expr> help getcmdtype() == ':' && getcmdline() ==# 'help' ? 'tab help' : 'help']])
+
+-- Browse help via Telescope (select opens in new tab)
+vim.keymap.set("n", "<leader>fh", function()
+	local builtin = require("telescope.builtin")
+	local actions = require("telescope.actions")
+	builtin.help_tags({
+		attach_mappings = function()
+			actions.select_default:replace(actions.select_tab)
+			return true
+		end,
+	})
+end, { desc = "Help tags" })
 
 vim.api.nvim_create_user_command("Cpy", function()
 	vim.cmd("%w !pbcopy")
