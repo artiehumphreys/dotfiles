@@ -431,6 +431,20 @@ vim.api.nvim_create_autocmd("FileType", {
 	end,
 })
 
+-- Create parent dirs upon save if missing
+vim.api.nvim_create_autocmd("BufWritePre", {
+	pattern = "*",
+	callback = function(ev)
+		if ev.match:match("^%w%w+://") then
+			return
+		end
+		local dir = vim.fs.dirname(vim.fs.abspath(ev.match))
+		if not vim.uv.fs_stat(dir) then
+			vim.fn.mkdir(dir, "p")
+		end
+	end,
+})
+
 -- C/C++: 2-space indent, use cindent (treesitter cpp indent is flaky on newline)
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = { "c", "cpp", "h" },
