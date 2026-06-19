@@ -7,7 +7,7 @@ return {
 		cmake_generate_options = { "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" },
 		cmake_compile_commands_options = {
 			action = "soft_link",
-			target = vim.fn.getcwd(),
+			target = vim.uv.cwd(),
 		},
 		cmake_regenerate_on_save = true,
 	},

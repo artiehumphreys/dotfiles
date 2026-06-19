@@ -15,7 +15,7 @@ vim.opt.expandtab = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.undofile = true
-vim.opt.undodir = vim.fn.expand("~/.config/nvim/undo//")
+vim.opt.undodir = vim.fs.normalize("~/.config/nvim/undo") .. "//"
 vim.opt.signcolumn = "yes"
 vim.opt.updatetime = 250
 
@@ -26,7 +26,7 @@ vim.opt.shell = "/bin/sh"
 vim.api.nvim_create_user_command("Term", function()
 	local saved = vim.o.shell
 	vim.o.shell = vim.env.SHELL or saved
-	vim.cmd("terminal")
+	vim.cmd.terminal()
 	vim.o.shell = saved
 end, {})
 
@@ -41,14 +41,14 @@ require("vim._core.ui2").enable({
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
-	vim.fn.system({
+	vim.system({
 		"git",
 		"clone",
 		"--filter=blob:none",
 		"https://github.com/folke/lazy.nvim.git",
 		"--branch=stable",
 		lazypath,
-	})
+	}):wait()
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -356,12 +356,12 @@ local map = vim.keymap.set
 map("n", "I", "i<Right>")
 map("n", "H", "^")
 map("i", "jj", "<Esc>")
-map("n", "Q", ":b#<CR>", { silent = true })
-map("n", "gt", ":bnext<CR>", { silent = true })
-map("n", "gT", ":bprev<CR>", { silent = true })
-map("n", "<leader>tn", ":tabnext<CR>", { silent = true })
-map("n", "<leader>tp", ":tabprev<CR>", { silent = true })
-map("n", "<leader>tc", ":tabclose<CR>", { silent = true })
+map("n", "Q", "<cmd>b#<cr>", { silent = true })
+map("n", "gt", "<cmd>bnext<cr>", { silent = true })
+map("n", "gT", "<cmd>bprev<cr>", { silent = true })
+map("n", "<leader>tn", "<cmd>tabnext<cr>", { silent = true })
+map("n", "<leader>tp", "<cmd>tabprev<cr>", { silent = true })
+map("n", "<leader>tc", "<cmd>tabclose<cr>", { silent = true })
 map("n", "<leader>lr", function()
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	if #clients == 0 then
@@ -392,8 +392,8 @@ end, { silent = true, desc = "Restart LSP" })
 map("i", "<C-BS>", "<C-W>")
 -- Cycle to next window and size it to 40% height
 map("n", "<leader>w", function()
-	vim.cmd("wincmd w")
-	vim.cmd("resize " .. math.floor(vim.o.lines * 0.4))
+	vim.cmd.wincmd("w")
+	vim.api.nvim_win_set_height(0, math.floor(vim.o.lines * 0.4))
 end, { silent = true, desc = "Cycle window + 40% height" })
 map("v", "<Tab>", ">gv")
 map("v", "Y", '"+y')
@@ -416,8 +416,7 @@ vim.keymap.set("n", "<leader>fh", function()
 end, { desc = "Help tags" })
 
 vim.api.nvim_create_user_command("Cpy", function()
-	vim.cmd("%w !pbcopy")
-	vim.cmd("redraw!")
+	vim.system({ "pbcopy" }, { stdin = vim.api.nvim_buf_get_lines(0, 0, -1, false) })
 end, {})
 
 vim.filetype.add({ extension = { mdx = "mdx" } })
@@ -469,7 +468,10 @@ vim.api.nvim_create_autocmd("BufNewFile", {
 			"",
 		}
 		vim.api.nvim_buf_set_lines(0, 0, 0, false, header)
-		vim.cmd("5r " .. vim.fn.expand("~/templates/template.cpp"))
+		local tmpl = vim.fs.normalize("~/templates/template.cpp")
+		if vim.uv.fs_stat(tmpl) then
+			vim.api.nvim_buf_set_lines(0, 5, 5, false, vim.fn.readfile(tmpl))
+		end
 	end,
 })
 
