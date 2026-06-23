@@ -2,7 +2,7 @@ theme = "Monokai Pro Light"
 
 font-family = "IoskeleyMono Nerd Font"
 font-variation = slnt=0
-font-size = 20
+font-size = 18
 adjust-cell-height = 0%
 
 # window-vsync = false

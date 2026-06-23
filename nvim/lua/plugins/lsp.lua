@@ -19,17 +19,8 @@ return {
 
 		vim.lsp.config("*", { capabilities = capabilities })
 
-		vim.lsp.config("clangd", {
-			cmd = {
-				"clangd",
-				"--log=error",
-				"--clang-tidy",
-				"--limit-references=100",
-				"--limit-results=20",
-				"--pch-storage=memory",
-				"--header-insertion=iwyu",
-			},
-		})
+		-- clangd config (incl. --experimental-modules-support for C++20
+		-- modules) lives in after/lsp/clangd.lua, the single source of truth.
 
 		vim.lsp.config("lua_ls", {
 			capabilities = capabilities,
