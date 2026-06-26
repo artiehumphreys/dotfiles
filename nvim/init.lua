@@ -310,6 +310,8 @@ vim.api.nvim_create_autocmd("TextChangedI", {
 	end,
 })
 
+vim.api.nvim_set_hl(0, "SnippetTabstop", {})
+
 -- Completion keymaps
 vim.keymap.set("i", "<CR>", function()
 	if vim.fn.pumvisible() == 0 then
