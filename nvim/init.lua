@@ -374,14 +374,9 @@ map("n", "<leader>w", function()
 end, { silent = true, desc = "Cycle window + 40% height" })
 map("v", "<Tab>", ">gv")
 map("v", "Y", '"+y')
-vim.cmd("iabbrev ;- —")
-
--- Open :help in new tab (native completion via <Tab>)
-vim.cmd([[cnoreabbrev <expr> h getcmdtype() == ':' && getcmdline() ==# 'h' ? 'tab h' : 'h']])
-vim.cmd([[cnoreabbrev <expr> help getcmdtype() == ':' && getcmdline() ==# 'help' ? 'tab help' : 'help']])
 
 -- Browse help via Telescope (select opens in new tab)
-vim.keymap.set("n", "<leader>fh", function()
+map("n", "<leader>fh", function()
 	local builtin = require("telescope.builtin")
 	local actions = require("telescope.actions")
 	builtin.help_tags({
@@ -391,6 +386,23 @@ vim.keymap.set("n", "<leader>fh", function()
 		end,
 	})
 end, { desc = "Help tags" })
+
+map("n", "<leader>cc", function()
+	local abs_path = vim.api.nvim_buf_get_name(0)
+	local filename = vim.fs.basename(abs_path)
+	local folder = vim.fs.basename(vim.fs.dirname(abs_path))
+
+	vim.cmd("botright new")
+	vim.api.nvim_win_set_height(0, math.floor(vim.o.lines / 4))
+	vim.cmd.term("fish")
+	vim.fn.chansend(vim.b.terminal_job_id, "cfmake " .. folder .. " " .. filename .. "\n")
+	vim.cmd.startinsert()
+end, { desc = "Compile current file (cfmake)" })
+
+vim.cmd("iabbrev ;- —")
+
+vim.cmd([[cnoreabbrev <expr> h getcmdtype() == ':' && getcmdline() ==# 'h' ? 'tab h' : 'h']])
+vim.cmd([[cnoreabbrev <expr> help getcmdtype() == ':' && getcmdline() ==# 'help' ? 'tab help' : 'help']])
 
 vim.api.nvim_create_user_command("Cpy", function()
 	vim.system({ "pbcopy" }, { stdin = vim.api.nvim_buf_get_lines(0, 0, -1, false) })
