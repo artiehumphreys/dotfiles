@@ -22,15 +22,6 @@ return {
 						path = { "?.lua", "?/init.lua" },
 						pathStrict = false,
 					},
-					workspace = {
-						checkThirdParty = false,
-						library = {
-							vim.env.VIMRUNTIME .. "/lua",
-							vim.env.VIMRUNTIME .. "/lua/vim/_meta",
-						},
-						maxPreload = 2000,
-						preloadFileSize = 1000,
-					},
 					diagnostics = {
 						globals = { "vim", "MiniTest" },
 						unusedLocalExclude = { "_*" },
