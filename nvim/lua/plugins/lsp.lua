@@ -3,7 +3,6 @@ return {
 	dependencies = {
 		"williamboman/mason.nvim",
 		"williamboman/mason-lspconfig.nvim",
-		"hrsh7th/cmp-nvim-lsp",
 		{
 			"folke/lazydev.nvim",
 			ft = "lua",
@@ -15,15 +14,7 @@ return {
 		},
 	},
 	config = function()
-		local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-		vim.lsp.config("*", { capabilities = capabilities })
-
-		-- clangd config (incl. --experimental-modules-support for C++20
-		-- modules) lives in after/lsp/clangd.lua, the single source of truth.
-
 		vim.lsp.config("lua_ls", {
-			capabilities = capabilities,
 			settings = {
 				Lua = {
 					runtime = {

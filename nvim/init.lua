@@ -1,8 +1,6 @@
--- Leader key
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- General Settings
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.termguicolors = true
@@ -19,16 +17,7 @@ vim.opt.undodir = vim.fs.normalize("~/.config/nvim/undo") .. "//"
 vim.opt.signcolumn = "yes"
 vim.opt.updatetime = 250
 
-vim.g.python3_host_prog = "/opt/homebrew/opt/python@3.13/libexec/bin/python"
-
 vim.opt.shell = "/bin/sh"
-
-vim.api.nvim_create_user_command("Term", function()
-	local saved = vim.o.shell
-	vim.o.shell = vim.env.SHELL or saved
-	vim.cmd.terminal()
-	vim.o.shell = saved
-end, {})
 
 require("vim._core.ui2").enable({
 	enable = true,
@@ -116,51 +105,6 @@ require("lazy").setup({
 	},
 	{ import = "plugins" },
 
-	-- Autocompletion
-	{
-		"hrsh7th/nvim-cmp",
-		dependencies = {
-			"hrsh7th/cmp-nvim-lsp",
-			"hrsh7th/cmp-buffer",
-			"hrsh7th/cmp-path",
-			"L3MON4D3/LuaSnip",
-			"saadparwaiz1/cmp_luasnip",
-		},
-		config = function()
-			local cmp = require("cmp")
-			local luasnip = require("luasnip")
-			cmp.setup({
-				snippet = {
-					expand = function(args)
-						luasnip.lsp_expand(args.body)
-					end,
-				},
-				mapping = cmp.mapping.preset.insert({
-					["<C-b>"] = cmp.mapping.scroll_docs(-4),
-					["<C-f>"] = cmp.mapping.scroll_docs(4),
-					["<C-Space>"] = cmp.mapping.complete(),
-					["<CR>"] = cmp.mapping.confirm({ select = true }),
-					["<Tab>"] = cmp.mapping(function(fallback)
-						if cmp.visible() then
-							cmp.select_next_item()
-						elseif luasnip.expand_or_jumpable() then
-							luasnip.expand_or_jump()
-						else
-							fallback()
-						end
-					end, { "i", "s" }),
-				}),
-				sources = cmp.config.sources({
-					{ name = "nvim_lsp" },
-					{ name = "luasnip" },
-				}, {
-					{ name = "buffer" },
-					{ name = "path" },
-				}),
-			})
-		end,
-	},
-
 	-- Formatting
 	{
 		"stevearc/conform.nvim",
@@ -206,29 +150,11 @@ require("lazy").setup({
 	-- Git
 	{ "tpope/vim-fugitive" },
 
-	-- Surround
-	{
-		"kylechui/nvim-surround",
-		version = "*",
-		event = "VeryLazy",
-		opts = {},
-	},
-
-	-- Commenting
-	{
-		"numToStr/Comment.nvim",
-		opts = {},
-	},
 	-- Auto pairs
 	{
 		"windwp/nvim-autopairs",
 		event = "InsertEnter",
-		config = function()
-			local autopairs = require("nvim-autopairs")
-			autopairs.setup({})
-			local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-			require("cmp").event:on("confirm_done", cmp_autopairs.on_confirm_done())
-		end,
+		opts = {},
 	},
 
 	-- Indent guides
@@ -309,6 +235,9 @@ require("lazy").setup({
 		"karb94/neoscroll.nvim",
 		opts = {},
 	},
+	{
+		dir = "/Users/artiehumphreys/plugins/sanitizer.nvim",
+	},
 }, {
 	rocks = { enabled = false },
 })
@@ -347,8 +276,27 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		if client and client:supports_method("textDocument/inlayHint") then
 			vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
 		end
+		if client and client:supports_method("textDocument/completion") then
+			vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+		end
 	end,
 })
+
+-- Completion keymaps
+vim.keymap.set("i", "<CR>", function()
+	if vim.fn.pumvisible() == 0 then
+		return "<CR>"
+	end
+	return vim.fn.complete_info().selected == -1 and "<C-n><C-y>" or "<C-y>"
+end, { expr = true, desc = "Confirm completion" })
+vim.keymap.set("i", "<Tab>", function()
+	if vim.fn.pumvisible() == 1 then
+		return "<C-n>"
+	elseif vim.snippet.active({ direction = 1 }) then
+		return "<cmd>lua vim.snippet.jump(1)<cr>"
+	end
+	return "<Tab>"
+end, { expr = true, desc = "Next item / snippet jump / tab" })
 
 -- Keymaps
 local map = vim.keymap.set
@@ -371,8 +319,7 @@ map("n", "<leader>lr", function()
 		c:stop()
 	end
 	-- wait for every client to fully exit before reloading, else the re-attach
-	-- races the still-stopping client and cmp-nvim-lsp keeps a stale client id
-	-- (source shows up "unavailable" -> no LSP completion until full restart)
+	-- races the still-stopping client and native completion keeps a stale client id
 	local timer = assert(vim.uv.new_timer())
 	timer:start(
 		50,
