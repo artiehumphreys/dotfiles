@@ -61,6 +61,15 @@ function wake-station --description "wake up workstation and ssh into it"
     ssh $WORKSTATION_HOST
 end
 
+function cfmake --description "compile a codeforces problem: cfmake <folder> <file>"
+    if test (count $argv) -lt 2
+        echo "usage: cfmake <folder> <file>" >&2
+        return 1
+    end
+    set -l prob (path change-extension '' -- $argv[2])
+    make -C ~/Desktop/codeforces COMP=$argv[1] PROB=$prob
+end
+
 #  Cargo/Rustup (replaces sourcing ~/.local/bin/env) 
 fish_add_path $HOME/.cargo/bin
 fish_add_path $HOME/.local/bin
