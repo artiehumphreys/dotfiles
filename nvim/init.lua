@@ -16,6 +16,7 @@ vim.opt.undofile = true
 vim.opt.undodir = vim.fs.normalize("~/.config/nvim/undo") .. "//"
 vim.opt.signcolumn = "yes"
 vim.opt.updatetime = 250
+vim.opt.completeopt = { "menuone", "noinsert", "popup" }
 
 vim.opt.shell = "/bin/sh"
 
@@ -248,6 +249,7 @@ vim.diagnostic.config({
 	signs = true,
 	underline = true,
 	update_in_insert = false,
+	severity_sort = true,
 	float = {
 		border = "rounded",
 		max_width = math.floor(vim.o.columns * 0.8),
@@ -282,6 +284,32 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
+-- As-you-type completion
+-- Suppress re-popping right after a completion is accepted
+local suppress_complete = false
+vim.api.nvim_create_autocmd("CompleteDone", {
+	callback = function()
+		suppress_complete = true
+	end,
+})
+vim.api.nvim_create_autocmd("InsertCharPre", {
+	callback = function()
+		suppress_complete = false
+	end,
+})
+vim.api.nvim_create_autocmd("TextChangedI", {
+	callback = function()
+		if suppress_complete or vim.fn.pumvisible() == 1 then
+			return
+		end
+		local line = vim.api.nvim_get_current_line()
+		local col = vim.fn.col(".") - 1
+		if line:sub(col, col):match("[%w_.]") then
+			pcall(vim.lsp.completion.get)
+		end
+	end,
+})
+
 -- Completion keymaps
 vim.keymap.set("i", "<CR>", function()
 	if vim.fn.pumvisible() == 0 then
@@ -298,7 +326,6 @@ vim.keymap.set("i", "<Tab>", function()
 	return "<Tab>"
 end, { expr = true, desc = "Next item / snippet jump / tab" })
 
--- Keymaps
 local map = vim.keymap.set
 
 map("n", "I", "i<Right>")
@@ -422,6 +449,5 @@ vim.api.nvim_create_autocmd("BufNewFile", {
 	end,
 })
 
--- vim-like scrolling support
 vim.opt.mouse = "a"
 vim.opt.mousescroll = "ver:3,hor:6"
