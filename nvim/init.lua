@@ -313,21 +313,6 @@ vim.api.nvim_create_autocmd("TextChangedI", {
 vim.api.nvim_set_hl(0, "SnippetTabstop", {})
 
 -- Completion keymaps
-vim.keymap.set("i", "<C-Space>", vim.lsp.completion.get, { desc = "Show completions" })
-vim.keymap.set("i", "<CR>", function()
-	if vim.fn.pumvisible() == 0 then
-		return "<CR>"
-	end
-	return vim.fn.complete_info().selected == -1 and "<C-n><C-y>" or "<C-y>"
-end, { expr = true, desc = "Confirm completion" })
-vim.keymap.set("i", "<Tab>", function()
-	if vim.fn.pumvisible() == 1 then
-		return "<C-n>"
-	elseif vim.snippet.active({ direction = 1 }) then
-		return "<cmd>lua vim.snippet.jump(1)<cr>"
-	end
-	return "<Tab>"
-end, { expr = true, desc = "Next item / snippet jump / tab" })
 
 local map = vim.keymap.set
 
@@ -387,6 +372,50 @@ map("n", "<leader>fh", function()
 	})
 end, { desc = "Help tags" })
 
+-- view C++ manpages via cppman, fuzzy finding with telescope
+map("n", "<leader>fc", function()
+	local cache = vim.fs.normalize("~/.cache/cppman/cppreference.com")
+	local pages = {}
+	for name, t in vim.fs.dir(cache) do
+		if t == "file" then
+			pages[#pages + 1] = name:gsub("%.3%.gz$", "")
+		end
+	end
+	if #pages == 0 then
+		vim.notify("No cppman pages cached; run `cppman -c`", vim.log.levels.WARN)
+		return
+	end
+	local pickers = require("telescope.pickers")
+	local finders = require("telescope.finders")
+	local conf = require("telescope.config").values
+	local actions = require("telescope.actions")
+	local action_state = require("telescope.actions.state")
+	pickers
+		.new({}, {
+			prompt_title = "cppman",
+			finder = finders.new_table({ results = pages }),
+			sorter = conf.generic_sorter({}),
+			attach_mappings = function(bufnr)
+				actions.select_default:replace(function()
+					actions.close(bufnr)
+					local sel = action_state.get_selected_entry()
+					if not sel then
+						return
+					end
+					local file = cache .. "/" .. sel[1] .. ".3.gz"
+					local lines = vim.fn.systemlist("man " .. vim.fn.shellescape(file) .. " | col -bx")
+					vim.cmd.tabnew()
+					local buf = vim.api.nvim_get_current_buf()
+					vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+					vim.bo[buf].filetype = "man"
+					vim.bo[buf].modifiable = false
+				end)
+				return true
+			end,
+		})
+		:find()
+end, { desc = "cppman pages" })
+
 map("n", "<leader>cc", function()
 	local abs_path = vim.api.nvim_buf_get_name(0)
 	local filename = vim.fs.basename(abs_path)
@@ -395,14 +424,32 @@ map("n", "<leader>cc", function()
 	vim.cmd("botright new")
 	vim.api.nvim_win_set_height(0, math.floor(vim.o.lines / 4))
 	vim.cmd.term("fish")
+	vim.wo.wrap = true
 	vim.fn.chansend(vim.b.terminal_job_id, "cfmake " .. folder .. " " .. filename .. "\n")
 	vim.cmd.startinsert()
 end, { desc = "Compile current file (cfmake)" })
 
+map("i", "<C-Space>", vim.lsp.completion.get, { desc = "Show completions" })
+
+map("i", "<CR>", function()
+	if vim.fn.pumvisible() == 0 then
+		return "<CR>"
+	end
+	return vim.fn.complete_info().selected == -1 and "<C-n><C-y>" or "<C-y>"
+end, { expr = true, desc = "Confirm completion" })
+
+map("i", "<Tab>", function()
+	if vim.fn.pumvisible() == 1 then
+		return "<C-n>"
+	elseif vim.snippet.active({ direction = 1 }) then
+		return "<cmd>lua vim.snippet.jump(1)<cr>"
+	end
+	return "<Tab>"
+end, { expr = true, desc = "Next item / snippet jump / tab" })
+
 vim.cmd("iabbrev ;- —")
 
 vim.cmd([[cnoreabbrev <expr> h getcmdtype() == ':' && getcmdline() ==# 'h' ? 'tab h' : 'h']])
-vim.cmd([[cnoreabbrev <expr> help getcmdtype() == ':' && getcmdline() ==# 'help' ? 'tab help' : 'help']])
 
 vim.api.nvim_create_user_command("Cpy", function()
 	vim.system({ "pbcopy" }, { stdin = vim.api.nvim_buf_get_lines(0, 0, -1, false) })
