@@ -429,6 +429,35 @@ map("n", "<leader>cc", function()
 	vim.cmd.startinsert()
 end, { desc = "Compile current file (cfmake)" })
 
+map("n", "<leader>rf", function()
+	local old_buf = vim.api.nvim_get_current_buf()
+	local old_file = vim.api.nvim_buf_get_name(old_buf)
+
+	vim.ui.input({ prompt = "New file path: ", default = old_file }, function(new_file)
+		if not new_file or new_file == "" or new_file == old_file then
+			vim.notify("Rename cancelled", vim.log.levels.INFO)
+			return
+		end
+		if vim.uv.fs_stat(new_file) then
+			vim.notify("Target already exists: " .. new_file, vim.log.levels.ERROR)
+			return
+		end
+
+		vim.api.nvim_buf_set_name(old_buf, new_file)
+		vim.api.nvim_buf_call(old_buf, function()
+			vim.cmd.write({ bang = true })
+		end)
+
+		local success, err = vim.uv.fs_unlink(old_file)
+
+		if success then
+			vim.notify("Renamed to: " .. new_file, vim.log.levels.INFO)
+		else
+			vim.notify("Error deleting old file: " .. tostring(err), vim.log.levels.ERROR)
+		end
+	end)
+end)
+
 map("i", "<C-Space>", vim.lsp.completion.get, { desc = "Show completions" })
 
 map("i", "<CR>", function()
