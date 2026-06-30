@@ -416,16 +416,43 @@ map("n", "<leader>fc", function()
 		:find()
 end, { desc = "cppman pages" })
 
+local cf_term = { buf = nil, job = nil }
+
+local function find_bufwinid(bufnr)
+	local wins = vim.api.nvim_tabpage_list_wins(0)
+
+	for _, win_id in ipairs(wins) do
+		if vim.api.nvim_win_get_buf(win_id) == bufnr then
+			return win_id
+		end
+	end
+	return -1
+end
+
 map("n", "<leader>cc", function()
 	local abs_path = vim.api.nvim_buf_get_name(0)
 	local filename = vim.fs.basename(abs_path)
 	local folder = vim.fs.basename(vim.fs.dirname(abs_path))
 
-	vim.cmd("botright new")
-	vim.api.nvim_win_set_height(0, math.floor(vim.o.lines / 4))
-	vim.cmd.term("fish")
-	vim.wo.wrap = true
-	vim.fn.chansend(vim.b.terminal_job_id, "cfmake " .. folder .. " " .. filename .. "\n")
+	if cf_term.buf and vim.api.nvim_buf_is_loaded(cf_term.buf) then
+		local win = find_bufwinid(cf_term.buf)
+		if win == -1 then
+			vim.cmd("botright sbuffer " .. cf_term.buf)
+			vim.api.nvim_win_set_height(0, math.floor(vim.o.lines / 4))
+		else
+			vim.api.nvim_set_current_win(win)
+		end
+	else
+		vim.cmd("botright new")
+		vim.api.nvim_win_set_height(0, math.floor(vim.o.lines / 4))
+		vim.cmd.term("fish")
+		vim.wo.wrap = true
+
+		cf_term.buf = vim.api.nvim_get_current_buf()
+		cf_term.job = vim.b.terminal_job_id
+	end
+
+	vim.fn.chansend(cf_term.job, "cfmake " .. folder .. " " .. filename .. "\n")
 	vim.cmd.startinsert()
 end, { desc = "Compile current file (cfmake)" })
 
