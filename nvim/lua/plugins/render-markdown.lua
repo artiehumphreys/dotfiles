@@ -14,6 +14,9 @@ return {
 			width = "block",
 			left_pad = 1,
 			right_pad = 2,
+			icons = function(ctx)
+				return table.concat(ctx.sections, ".") .. ". "
+			end,
 		},
 		code = {
 			sign = false,
