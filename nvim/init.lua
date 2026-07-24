@@ -237,6 +237,10 @@ require("lazy").setup({
 		opts = {},
 	},
 	{
+		"folke/zen-mode.nvim",
+		opts = {},
+	},
+	{
 		dir = "/Users/artiehumphreys/plugins/sanitizer.nvim",
 	},
 }, {
